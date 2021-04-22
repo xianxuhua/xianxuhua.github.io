@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>mysql学习2 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">mysql学习2</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>_模糊查询</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user where name like &quot;xxh_&quot;; -- _表示匹配一个字符，%是匹配多个字符</span><br></pre></td></tr></table></figure>
+<p>between等价于… &lt;= … &lt;= …<br>in用法相当于or</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from user where height in (180,178);</span><br></pre></td></tr></table></figure>
+<p>in子查询，若不使用子查询可以给user表添加level字段，若无level字段，level=1的class可能增加，就必须使用子查询</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 取出一年级的学生</span><br><span class="line">select * from user where class in (select id from class_table where level&#x3D;1);</span><br></pre></td></tr></table></figure>
+<p>交集运算</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">select * from user1 union select * from user2; -- union自动去除重复记录</span><br><span class="line">-- 两表的字段类型需相同</span><br><span class="line">-- order by子句只能使用一次</span><br><span class="line">select * from user1 union select * from user2 order by add_time;</span><br><span class="line">-- all关键字保留重复行</span><br><span class="line">select * from user1 union all select * from user2;</span><br></pre></td></tr></table></figure>
+<p>内连接，on条件对左右两侧表都生效</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select u.name,c.name from user as u inner join class as c on u.class&#x3D;c.id;</span><br><span class="line">-- 和where结合</span><br><span class="line">select u.name,c.name from user as u inner join class as c on u.class&#x3D;c.id where u.name like &quot;xxh%&quot;;</span><br></pre></td></tr></table></figure>
+<p>外连接的on条件只对一侧的表有效,主表有多少条记录就返回多少条</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select u.name,c.name from user as u right join class as c on u.class&#x3D;c.id;</span><br></pre></td></tr></table></figure>
+<p>三张表的连接</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select u.name, c.name, t.name from user as u left join class as c on u.class&#x3D;c.id left join teacher as t on c.teacher&#x3D;t.id;</span><br></pre></td></tr></table></figure>
+<p>交叉连接(笛卡尔积), 生成user表的行数 * class表的行数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from user cross join class;</span><br></pre></td></tr></table></figure>
+<p>处理null值为不确定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select u.name, c.name, coalesce(t.name, &#39;不确定&#39;) from user as u left join class as c on u.class&#x3D;c.id left join teacher as t on c.teacher&#x3D;t.id;</span><br></pre></td></tr></table></figure>
+<p>窗口函数，mysql8支持，只能写在select子句中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">-- 按班级计算学生成绩排名</span><br><span class="line">select name, class, score, rank() over(partition by class order by score desc) as ranking FROM &#96;user&#96;;</span><br><span class="line">-- 按全校成绩排名,取出排名前三	</span><br><span class="line">select id,&#96;name&#96;,class,score,rank() over(order by score desc) as ranking FROM &#96;user&#96; limit 3;</span><br><span class="line">-- dense_rank, row_number也计算排名，若有两个第一名，返回1、1、2，row_number返回1、2、3，rank返回1、1、3</span><br><span class="line">-- 也可以把聚合函数作为窗口函数使用</span><br><span class="line">-- 取出每个班级排名前3</span><br><span class="line">select * from (select id,&#96;name&#96;,class,score,rank() over(partition by class order by score desc) as ranking FROM &#96;user&#96;) as u where u.ranking &lt;&#x3D; 3;</span><br></pre></td></tr></table></figure>
+<p>聚合函数作为窗口函数,累计统计法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">select *, sum(score) over (order by id) as sum_score from user;</span><br><span class="line">-- 结果,逐行累加</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">| id | name | score | class | sum_score |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">|  1 | xxh  |   200 |     1 |       200 |</span><br><span class="line">|  2 | xxh2 |   101 |     2 |       301 |</span><br><span class="line">|  3 | xxh3 |    99 |     1 |       400 |</span><br><span class="line">|  4 | xxh4 |   200 |     2 |       600 |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">select *, avg(score) over (order by id) as avg_score from user;</span><br><span class="line">-- 累计求平均，第二行&#x3D;(200+101)&#x2F;2, 第三行&#x3D;(99+101+200)&#x2F;3</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">| id | name | score | class | avg_score |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">|  1 | xxh  |   200 |     1 |  200.0000 |</span><br><span class="line">|  2 | xxh2 |   101 |     2 |  150.5000 |</span><br><span class="line">|  3 | xxh3 |    99 |     1 |  133.3333 |</span><br><span class="line">|  4 | xxh4 |   200 |     2 |  150.0000 |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">-- 累计限制最近的行数</span><br><span class="line">select \*, sum(score) over (order by id rows 2 preceding) as sum\_score from user;</span><br><span class="line">-- 结果，只那当前值和上一行相加</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">| id | name | score | class | sum\_score |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">|  1 | xxh  |   200 |     1 |       200 |</span><br><span class="line">|  2 | xxh2 |   101 |     2 |       301 |</span><br><span class="line">|  3 | xxh3 |    99 |     1 |       200 |</span><br><span class="line">|  4 | xxh4 |   200 |     2 |       299 |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">-- 累计前后</span><br><span class="line">select *, sum(score) over (order by id rows between 1 preceding and 1 following) as sum_score from user;</span><br><span class="line">-- 结果</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">| id | name | score | class | sum_score |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br><span class="line">|  1 | xxh  |   200 |     1 |       301 |</span><br><span class="line">|  2 | xxh2 |   101 |     2 |       400 |</span><br><span class="line">|  3 | xxh3 |    99 |     1 |       400 |</span><br><span class="line">|  4 | xxh4 |   200 |     2 |       299 |</span><br><span class="line">+----+------+-------+-------+-----------+</span><br></pre></td></tr></table></figure>
+<p>总计和小记：同时统计每个班总分和全校总分</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- &#39;总计&#39;为常量，补足列使两倍列数一致</span><br><span class="line">select class,sum(score) from user group by class union select &#39;总计&#39; as class,sum(score) from user;</span><br></pre></td></tr></table></figure>
+<p>使用rollup直接得到总计和小记</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select class,sum(score) from user group by class with rollup;</span><br></pre></td></tr></table></figure>
+
+
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-02</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>

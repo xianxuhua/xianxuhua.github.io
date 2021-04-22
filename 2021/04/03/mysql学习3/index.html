@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>mysql学习3 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">mysql学习3</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>exist,基本上可以用in代替，后面通常是子查询,子查询通常是select *</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select u.name,u.class from user as u where exists (</span><br><span class="line">	select * from class as c where u.class&#x3D;c.id and u.class&#x3D;1</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>case表达式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">返回的数据类型需一致</span><br><span class="line">-- concat字符连接</span><br><span class="line">select name, </span><br><span class="line">    case when class &#x3D; 1 then concat(&quot;A&quot;, class) </span><br><span class="line">    when class &#x3D; 2 then concat(&#39;B&#39;,class)</span><br><span class="line">    else NULL end。-- 若不写else默认返回NULL</span><br><span class="line">    as class_t</span><br><span class="line">from user;</span><br><span class="line">-- 写法2</span><br><span class="line">case name</span><br><span class="line">    when &#39;xxh&#39; then &#39;ok&#39;</span><br><span class="line">	when &#39;xjy&#39; then &#39;no&#39;</span><br><span class="line">else &#39;other&#39; end</span><br></pre></td></tr></table></figure>
+<p>通过case为money设置等级以及统计数量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">select </span><br><span class="line">	case when money &lt;&#x3D; 1000 then &#39;01&#39;</span><br><span class="line">	when money &lt;&#x3D; 2000 then &#39;02&#39;</span><br><span class="line">	when money &lt;&#x3D; 3000 then &#39;03&#39;</span><br><span class="line">	else &#39;04&#39; end as money_level,</span><br><span class="line">	count(*)</span><br><span class="line">from user group by</span><br><span class="line">	case when money &lt;&#x3D; 1000 then &#39;01&#39;</span><br><span class="line">	when money &lt;&#x3D; 2000 then &#39;02&#39;</span><br><span class="line">	when money &lt;&#x3D; 3000 then &#39;03&#39;</span><br><span class="line">	else &#39;04&#39; end;</span><br><span class="line">-- 输出</span><br><span class="line">+-------------+----------+</span><br><span class="line">| money_level | count(*) |</span><br><span class="line">+-------------+----------+</span><br><span class="line">| 01          |        1 |</span><br><span class="line">| 02          |        3 |</span><br><span class="line">| 03          |        2 |</span><br><span class="line">| 04          |        1 |</span><br><span class="line">+-------------+----------+</span><br><span class="line">-- group by之后使用select的别名也可以正确执行，但违反了sql规范(select在group by后执行)</span><br><span class="line">select  case when money &lt;&#x3D; 1000 then &#39;01&#39; when money &lt;&#x3D; 2000 then &#39;02&#39; when money &lt;&#x3D; 3000 then &#39;03&#39; else &#39;04&#39; end as money_level, count(*) from user group by money_level;</span><br></pre></td></tr></table></figure>
+<p>聚合函数中使用case</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">-- 统计每个班男女生总money</span><br><span class="line">select class,</span><br><span class="line">	sum(case when gender&#x3D;1 then money else 0 end) as male_money,</span><br><span class="line">	sum(case when gender&#x3D;2 then money else 0 end) as female_money</span><br><span class="line">from user group by class;</span><br><span class="line">-- 查询结果</span><br><span class="line">+-------+------------+--------------+</span><br><span class="line">| class | male_money | female_money |</span><br><span class="line">+-------+------------+--------------+</span><br><span class="line">|     1 |    1000.00 |      6500.00 |</span><br><span class="line">|     2 |    4499.00 |      1500.00 |</span><br><span class="line">|     3 |    2000.00 |         0.00 |</span><br><span class="line">+-------+------------+--------------+</span><br></pre></td></tr></table></figure>
+<p>update语句中使用case</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">-- 工资为30w以上的降薪10%，工资为25w-28w的加薪20%</span><br><span class="line">-- 若写两条update则不正确</span><br><span class="line">update salarys set salary &#x3D; salary * 1.1 where salary &gt;&#x3D; 300000;</span><br><span class="line">update salarys set salary &#x3D; salary * 0.8 where salary &gt;&#x3D; 250000 and salary &lt;&#x3D; 280000;</span><br><span class="line">-- 30w的员工降薪后又执行了加薪操作，可使用case解决</span><br><span class="line">update salarys set salary &#x3D; </span><br><span class="line">case when salary &gt;&#x3D; 300000 then salary * 1.1</span><br><span class="line">	 when salary &gt;&#x3D; 250000 and salary &lt;&#x3D; 280000 then salary * 0.8</span><br><span class="line">else salary end;</span><br><span class="line">-- 若交换两条记录的值，若不使用case需要借助中间变量</span><br><span class="line">update user set key &#x3D; &#39;c&#39; where key &#x3D; &#39;a&#39;;</span><br><span class="line">update user set key &#x3D; &#39;a&#39; where key &#x3D; &#39;b&#39;;</span><br><span class="line">update user set key &#x3D; &#39;b&#39; where key &#x3D; &#39;c&#39;;</span><br><span class="line">-- 若使用case只需执行一次</span><br><span class="line">update user set key &#x3D; </span><br><span class="line">case when key &#x3D; &#39;a&#39; then &#39;b&#39;</span><br><span class="line">	 when key &#x3D; &#39;b&#39; then &#39;a&#39;</span><br><span class="line">else key end where key in (&#39;a&#39;, &#39;b&#39;);</span><br></pre></td></tr></table></figure>
+<p>case和in、exist的结合使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">-- 查看学生某个月份是否有课</span><br><span class="line">select name,</span><br><span class="line">case when class in (</span><br><span class="line">	select id from class where open_time like &quot;2020-02-%&quot;) then &quot;有课&quot;</span><br><span class="line">else &#39;没课&#39; end as &quot;二月&quot;,</span><br><span class="line">case when class in (</span><br><span class="line">	select id from class where open_time like &quot;2020-03-%&quot;) then &quot;有课&quot;</span><br><span class="line">else &quot;没课&quot; end as &quot;三月&quot; </span><br><span class="line">from user;</span><br><span class="line">-- 结果</span><br><span class="line">+------+--------+--------+</span><br><span class="line">| name | 二月   | 三月   |</span><br><span class="line">+------+--------+--------+</span><br><span class="line">| xxh  | 有课   | 没课   |</span><br><span class="line">| xxh2 | 有课   | 没课   |</span><br><span class="line">| xxh3 | 没课   | 有课   |</span><br><span class="line">| xxh4 | 有课   | 没课   |</span><br><span class="line">| xxh5 | 有课   | 没课   |</span><br><span class="line">| xxh6 | 有课   | 没课   |</span><br><span class="line">| 111  | 有课   | 没课   |</span><br><span class="line">+------+--------+--------+</span><br><span class="line">-- 使用exists，结果一致</span><br><span class="line">select name,</span><br><span class="line">case when exists (</span><br><span class="line">	select id from class where open_time like &quot;2020-02-%&quot;) then &quot;有课&quot;</span><br><span class="line">else &#39;没课&#39; end as &quot;二月&quot;,</span><br><span class="line">case when exists (</span><br><span class="line">	select id from class where open_time like &quot;2020-03-%&quot;) then &quot;有课&quot;</span><br><span class="line">else &quot;没课&quot; end as &quot;三月&quot; </span><br><span class="line">from user;</span><br></pre></td></tr></table></figure>
+<p>使用case对多列求最大值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">-- 表结构如下</span><br><span class="line">+------+------+------+------+</span><br><span class="line">| key  | x    | y    | z    |</span><br><span class="line">+------+------+------+------+</span><br><span class="line">| A    |    1 |    2 |    3 |</span><br><span class="line">| B    |    5 |    5 |    2 |</span><br><span class="line">| C    |    4 |    7 |    1 |</span><br><span class="line">| D    |    3 |    3 |    8 |</span><br><span class="line">+------+------+------+------+</span><br><span class="line">-- 先求出x、y的最大值</span><br><span class="line">select case when x &gt; y then x else y end from greatests;</span><br><span class="line">-- 再和z比较</span><br><span class="line">select </span><br><span class="line">	case when z &gt; (case when x &gt; y then x else y end) then z</span><br><span class="line"> 	else (case when x &gt; y then x else y end)  end</span><br><span class="line">from greatests; </span><br><span class="line">-- 方法二，使用内置函数</span><br><span class="line">select GREATEST(GREATEST(x,y), z) from greatests;</span><br></pre></td></tr></table></figure>
+<p>矩阵转置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">-- 原数据</span><br><span class="line">+----------+------+------+</span><br><span class="line">| province | sex  | num  |</span><br><span class="line">+----------+------+------+</span><br><span class="line">| 山东     |    1 |   60 |</span><br><span class="line">| 山东     |    2 |   40 |</span><br><span class="line">| 上海     |    1 |  100 |</span><br><span class="line">| 上海     |    2 |  100 |</span><br><span class="line">| 杭州     |    1 |  100 |</span><br><span class="line">| 杭州     |    2 |   50 |</span><br><span class="line">+----------+------+------+</span><br><span class="line">select </span><br><span class="line">  case when sex&#x3D;1 then &#39;男&#39; else &#39;女&#39; end as &#39;性别&#39;,</span><br><span class="line">  sum(case when province&#x3D;&#39;山东&#39; then num else 0 end) as &#39;山东&#39;,</span><br><span class="line">  sum(case when province&#x3D;&#39;上海&#39; then num else 0 end) as &#39;上海&#39;,</span><br><span class="line">  sum(case when province&#x3D;&#39;杭州&#39; then num else 0 end) as &#39;杭州&#39;</span><br><span class="line">from province_people group by sex;</span><br><span class="line">-- 结果</span><br><span class="line">+--------+--------+--------+--------+</span><br><span class="line">| 性别   | 山东   | 上海   | 杭州   |</span><br><span class="line">+--------+--------+--------+--------+</span><br><span class="line">| 男     |     60 |    100 |    100 |</span><br><span class="line">| 女     |     40 |    100 |     50 |</span><br><span class="line">+--------+--------+--------+--------+</span><br></pre></td></tr></table></figure>
+<p>按照特定顺序输出，不输出a, b, c, d, 输出b, a, d, c</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">select &#96;key&#96; from greatests order by </span><br><span class="line">  case &#96;key&#96; </span><br><span class="line">	when &#39;B&#39; then 1</span><br><span class="line">	when &#39;A&#39; then 2</span><br><span class="line">	when &#39;D&#39; then 3</span><br><span class="line">	when &#39;C&#39; then 4</span><br><span class="line">  end;</span><br></pre></td></tr></table></figure>
+
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-03</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>redlock redis分布式锁 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">redlock redis分布式锁</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>redis主从复制模式下使用分布式锁：<br>go协程对redis主服务器setnx，把主服务器的setnx后的结果同步到从服务器</p>
+<p>带来的问题：</p>
+<ol>
+<li>master节点宕机，从节点没来得及同步到setnx的数据</li>
+<li>网络故障，setnx的数据已过期</li>
+</ol>
+<p>非redis主从模式，redis服务器处于同等地位，go协程对所有redis服务器setnx，把set到多数redis服务器的go协程视为拿锁成功</p>
+<p>扣减库存程序</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Service)</span> <span class="title">Sell</span><span class="params">(ctx context.Context, request *inventorypb.SellInfoRequest)</span> <span class="params">(*emptypb.Empty, error)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 必须所有商品扣减成功，不能第一件扣除，第二件失败</span></span><br><span class="line">	tx := s.DB.Begin()</span><br><span class="line">	<span class="keyword">for</span> _, goodsInfo := <span class="keyword">range</span> request.GoodsInfo &#123;</span><br><span class="line"></span><br><span class="line">		mutex := s.RedSync.NewMutex(fmt.Sprintf(<span class="string">&quot;inv_%d&quot;</span>, goodsInfo.GoodsId))</span><br><span class="line">		<span class="keyword">if</span> err := mutex.Lock(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			s.Logger.Error(<span class="string">&quot;can not get redis lock&quot;</span>, zap.Error(err))</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, status.Error(codes.Internal, <span class="string">&quot;can not get redis lock&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">var</span> inv model.Inventory</span><br><span class="line">		res := s.DB.Where(&amp;model.Inventory&#123;GoodsID: goodsInfo.GoodsId&#125;).First(&amp;inv)</span><br><span class="line">		<span class="keyword">if</span> res.Error != <span class="literal">nil</span> &#123;</span><br><span class="line">			s.Logger.Error(<span class="string">&quot;can not get inv&quot;</span>, zap.Error(res.Error))</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, status.Error(codes.Internal, <span class="string">&quot;&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> res.RowsAffected == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="comment">// 没有该商品的库存信息</span></span><br><span class="line">			tx.Rollback()</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, status.Error(codes.NotFound, <span class="string">&quot;&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> inv.Stocks &lt; goodsInfo.Num &#123;</span><br><span class="line">			<span class="comment">// 现有库存小于购买数量</span></span><br><span class="line">			tx.Rollback()</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, status.Error(codes.ResourceExhausted, <span class="string">&quot;&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 数据库真实扣减小于预期扣减，超卖问题</span></span><br><span class="line">		inv.Stocks -= goodsInfo.Num</span><br><span class="line">		tx.Save(&amp;inv)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> ok, err := mutex.Unlock(); !ok || err != <span class="literal">nil</span> &#123;</span><br><span class="line">			s.Logger.Error(<span class="string">&quot;can not unlock redis&quot;</span>)</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, status.Error(codes.Internal, <span class="string">&quot;&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	tx.Commit()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> &amp;emptypb.Empty&#123;&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// redsync lock源码</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">LockContext</span><span class="params">(ctx context.Context)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// 生成随机value防止被其他协程删除</span></span><br><span class="line">	value, err := m.genValueFunc()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// tries为拿锁失败尝试次数</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; m.tries; i++ &#123;</span><br><span class="line">		<span class="keyword">if</span> i != <span class="number">0</span> &#123;</span><br><span class="line">            <span class="comment">// 拿锁失败sleep一段时间</span></span><br><span class="line">			time.Sleep(m.delayFunc(i))</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		start := time.Now()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对每一台redis集群进行setnx</span></span><br><span class="line">		n, err := m.actOnPoolsAsync(<span class="function"><span class="keyword">func</span><span class="params">(pool redis.Pool)</span> <span class="params">(<span class="keyword">bool</span>, error)</span></span> &#123;</span><br><span class="line">			<span class="keyword">return</span> m.acquire(ctx, pool, value)</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">if</span> n == <span class="number">0</span> &amp;&amp; err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		now := time.Now()</span><br><span class="line">        <span class="comment">// expiry：超时时间，防止拿锁后宕机其他协程无法拿锁导致死锁</span></span><br><span class="line">        <span class="comment">// 超时时间 - 拿锁时间 - 时钟飘逸(服务器间有时钟差) = 剩余时间</span></span><br><span class="line">		until := now.Add(m.expiry - now.Sub(start) - time.Duration(<span class="keyword">int64</span>(<span class="keyword">float64</span>(m.expiry)*m.factor)))</span><br><span class="line">        <span class="comment">// quorum：len(redis集群数)/2 + 1，redis服务器数应为奇数</span></span><br><span class="line">        <span class="comment">// 若对大多数redis服务器setnx成功并且key没有过时，才算拿锁成功</span></span><br><span class="line">		<span class="keyword">if</span> n &gt;= m.quorum &amp;&amp; now.Before(until) &#123;</span><br><span class="line">			m.value = value</span><br><span class="line">			m.until = until</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 否则释放锁</span></span><br><span class="line">		_, _ = m.actOnPoolsAsync(<span class="function"><span class="keyword">func</span><span class="params">(pool redis.Pool)</span> <span class="params">(<span class="keyword">bool</span>, error)</span></span> &#123;</span><br><span class="line">			<span class="keyword">return</span> m.release(ctx, pool, value)</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ErrFailed</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *Mutex)</span> <span class="title">actOnPoolsAsync</span><span class="params">(actFn <span class="keyword">func</span>(redis.Pool)</span> <span class="params">(<span class="keyword">bool</span>, error)</span>) <span class="params">(<span class="keyword">int</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">type</span> result <span class="keyword">struct</span> &#123;</span><br><span class="line">		Status <span class="keyword">bool</span></span><br><span class="line">		Err    error</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> result)</span><br><span class="line">    <span class="comment">// 对每台redis服务器异步拿锁，actFn就是setnx</span></span><br><span class="line">	<span class="keyword">for</span> _, pool := <span class="keyword">range</span> m.pools &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(pool redis.Pool)</span></span> &#123;</span><br><span class="line">			r := result&#123;&#125;</span><br><span class="line">			r.Status, r.Err = actFn(pool)</span><br><span class="line">			ch &lt;- r</span><br><span class="line">		&#125;(pool)</span><br><span class="line">	&#125;</span><br><span class="line">	n := <span class="number">0</span></span><br><span class="line">	<span class="keyword">var</span> err error</span><br><span class="line">	<span class="keyword">for</span> <span class="keyword">range</span> m.pools &#123;</span><br><span class="line">		r := &lt;-ch</span><br><span class="line">        <span class="comment">// 拿锁成功</span></span><br><span class="line">		<span class="keyword">if</span> r.Status &#123;</span><br><span class="line">			n++</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> r.Err != <span class="literal">nil</span> &#123;</span><br><span class="line">			err = multierror.Append(err, r.Err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> n, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-21</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>

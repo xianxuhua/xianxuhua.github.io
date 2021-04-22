@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>mysql学习 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">mysql学习</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>添加列：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table user add column name varchar(20);</span><br></pre></td></tr></table></figure>
+<p>删除列：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table user drop column name;</span><br></pre></td></tr></table></figure>
+<p>修改表名：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rename table user to user_user;</span><br></pre></td></tr></table></figure>
+<p>使用中文别名需用双引号</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name as &quot;姓名&quot; from user;</span><br></pre></td></tr></table></figure>
+<p>去除重复数据,null数据也会被去重成一列</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select distinct name from user;</span><br></pre></td></tr></table></figure>
+<p>多条字段联合去重</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select distinct name,email from user;</span><br></pre></td></tr></table></figure>
+<p>一行注释：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-- 这是注释</span><br></pre></td></tr></table></figure>
+<p>多行注释</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;*</span><br><span class="line">多行注释</span><br><span class="line">*&#x2F;</span><br></pre></td></tr></table></figure>
+<p>使用运算表达式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name, money * 2 as &quot;money2&quot; from user;</span><br></pre></td></tr></table></figure>
+<p>null参与运算结果为null</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">null + 1, null &#x2F; 0 </span><br><span class="line">-- 结果都为null</span><br></pre></td></tr></table></figure>
+<p>不依赖表执行运算,得到临时数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select (1+2)*3 as result;</span><br></pre></td></tr></table></figure>
+<p>不等于的表示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user where money &lt;&gt; 2000;</span><br></pre></td></tr></table></figure>
+<p>日期的比较</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user where add_time &gt;&#x3D; &quot;2000-1-1&quot;;</span><br></pre></td></tr></table></figure>
+<p>where子句使用计算表达式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user where end_money - start_money &gt; 500;</span><br></pre></td></tr></table></figure>
+<p>字符的比较,按字典序,可以得到’2…’,’3…’,不能得到’10…’</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select c from user where c &gt; &#39;1&#39;;</span><br></pre></td></tr></table></figure>
+<p>not查询</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select name from user where not money &gt; 1000;</span><br><span class="line">-- 等价于select name from user where money &lt;&#x3D; 1000;</span><br></pre></td></tr></table></figure>
+<p>count某个字段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select count(name) from user;</span><br><span class="line">-- 查找name不为空的行数</span><br></pre></td></tr></table></figure>
+<p>聚合函数,count(*)除外,自动忽略null</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select sum(money) from user;</span><br></pre></td></tr></table></figure>
+<p>sum, avg只能用于数值类型，max, min可以用于任意类型</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select max(add_time) from user;</span><br></pre></td></tr></table></figure>
+<p>统计字段不同值的个数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select count(distinct name) from user;</span><br></pre></td></tr></table></figure>
+<p>group by需写在where的后面<br>执行顺序：from -&gt; where -&gt; group by -&gt; select<br>没有包含在group by子句中的字段不能写在select、having子句中，可以写在聚合函数中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select class from user group by class having name&#x3D;&quot;xxh&quot;; -- no</span><br><span class="line">select count(class) from user group by class; -- yes</span><br></pre></td></tr></table></figure>
+<p>group by执行后结果顺序是随机的<br>只有select和having、order by子句能使用聚合函数<br>having子句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select class from user group by class having count(\*)&#x3D;2;</span><br></pre></td></tr></table></figure>
+<p>能写在where子句中尽量不要写在having子句中,where子句可以针对索引加快执行速度<br>多个字段的排序,优先使用左侧的add_time字段排序</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user order_by add_time, money; </span><br></pre></td></tr></table></figure>
+<p>null值不能参与排序，排序后放在排序结果的末尾<br>group by子句不能使用别名，order by子句可以</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select add_time as a, money as m from user order by a, m;</span><br></pre></td></tr></table></figure>
+<p>sql语句执行顺序: from -&gt; where -&gt; group by -&gt; having -&gt; select -&gt; order by</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select name from user order by money;</span><br></pre></td></tr></table></figure>
+<p>插入多行数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user values(&#39;xxh&#39;, 18), (&#39;xxh2&#39;, 19);</span><br></pre></td></tr></table></figure>
+<p>insert和select联合使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into user_temp(name, age) select name, age from user;</span><br></pre></td></tr></table></figure>
+<p>清空数据表</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">delete from user;</span><br><span class="line">truncate user;</span><br></pre></td></tr></table></figure>
+<p>update对多字段更新</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">update user set name&#x3D;&#39;xxh&#39;,age&#x3D;18;</span><br><span class="line">或 update user set (name,age)&#x3D;(&#39;xxh&#39;,18);</span><br></pre></td></tr></table></figure>
+<p>开启事务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">start transaction;</span><br><span class="line">update user set start_money&#x3D;1000*1.1;</span><br><span class="line">update user set end_money&#x3D;1000*0.9;</span><br><span class="line">commit;</span><br></pre></td></tr></table></figure>
+<p>未提交之前可回滚</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">start transaction;</span><br><span class="line">update ...;</span><br><span class="line">update ...;</span><br><span class="line">rollback;</span><br></pre></td></tr></table></figure>
+<p>视图保存的是select语句</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create view myview (name, age) as select name, age from user;</span><br></pre></td></tr></table></figure>
+<p>多重视图会降低性能，避免使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create view myview2 (name, avg_age) as select (name, avg(age)) from myview; </span><br></pre></td></tr></table></figure>
+<p>视图的限制：<br>1、定义视图不能使用order by<br>2、如果原表可更新(原表创建view时加了where限制也可以通过view插入数据)，视图也可以更新，原表若使用了group by则无法更新<br>子查询原则上都需要使用别名</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select * from </span><br><span class="line">(select count(*) from user order by class) </span><br><span class="line">as user_count;</span><br></pre></td></tr></table></figure>
+<p>标量子查询,子查询只返回一行数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 查找身高大于平均身高的学生</span><br><span class="line">select * from user where height &gt; (select avg(height) from user);</span><br></pre></td></tr></table></figure>
+<p>having子句中使用子查询</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 查处班级平均身高大于全年级平均身高的班级，显示班级和班级平均身高</span><br><span class="line">select class, avg(height) from user group by class having avg(height) &gt; (select avg(height) from user);</span><br></pre></td></tr></table></figure>
+<p>非标量子查询返回多行结果，不能用在=、&lt;&gt;、select子句中<br>关联子查询，对于子查询返回多行结果的处理方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- 取出每个身高大于班级平均身高的学生</span><br><span class="line">select name from user as u1 where height &gt; (select avg(height) from user as u2 where u1.class&#x3D;u2.class group by class);</span><br><span class="line">-- where条件不能写在外部,u2的作用域处在括号内</span><br><span class="line">select name from user as u1 where u1.class&#x3D;u2.class and height &gt; (select avg(height) from user as u2);</span><br></pre></td></tr></table></figure>
+<p>内置日期函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">select current_date;</span><br><span class="line">select current_time;</span><br><span class="line">select CURRENT_TIMESTAMP; -- 获取当前日期和时间</span><br><span class="line">select extract(year from CURRENT_TIMESTAMP); -- 截取部分时间(年)</span><br></pre></td></tr></table></figure>
+<p>类型转换</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select cast(&#39;0101&#39; as signed int);</span><br><span class="line">select cast(&#39;2010-1-1&#39; as date);</span><br><span class="line">select coalesce(NULL, 1, 2); -- 将null转化为其他值，接受可变长参数，返回第一个不是null的值</span><br></pre></td></tr></table></figure>
+
+
+
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-02</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>

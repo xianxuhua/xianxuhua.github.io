@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>mysql学习8 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">mysql学习8</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>exists用法，查询缺席的人</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">-- 原数据</span><br><span class="line">+-----------+--------+</span><br><span class="line">| meeting   | person |</span><br><span class="line">+-----------+--------+</span><br><span class="line">| 第一次     | 张三    |</span><br><span class="line">| 第一次     | 李四    |</span><br><span class="line">| 第一次     | 王五    |</span><br><span class="line">| 第二次     | 张三    |</span><br><span class="line">| 第二次     | 赵六    |</span><br><span class="line">| 第三次     | 李四    |</span><br><span class="line">| 第三次     | 王五    |</span><br><span class="line">| 第三次     | 赵六    |</span><br><span class="line">+-----------+--------+</span><br><span class="line">-- 预期结果</span><br><span class="line">+-----------+--------+</span><br><span class="line">| meeting   | person |</span><br><span class="line">+-----------+--------+</span><br><span class="line">| 第三次     | 张三   |</span><br><span class="line">| 第二次     | 李四   |</span><br><span class="line">| 第二次     | 王五   |</span><br><span class="line">| 第一次     | 赵六   |</span><br><span class="line">+-----------+--------+</span><br><span class="line">-- 可以用假设所有人都参加减去实际参加得到</span><br><span class="line">-- 所有参加的情况可通过交叉链接得到</span><br><span class="line">select distinct m1.meeting, m2.person from meetings as m1 cross join meetings as m2;</span><br><span class="line">-- 再用not exist减去实际参加的人</span><br><span class="line">select distinct m1.meeting,m2.person from meetings as m1 </span><br><span class="line">cross join meetings as m2 where not exists </span><br><span class="line">(select * from meetings m3 where m1.meeting &#x3D; m3.meeting and m2.person &#x3D; m3.person);</span><br></pre></td></tr></table></figure>
+<p>肯定转双重否定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">-- 查出所有科目成绩都在50分以上的学生</span><br><span class="line">+------------+---------+-------+</span><br><span class="line">| student_id | subject | score |</span><br><span class="line">+------------+---------+-------+</span><br><span class="line">|          1 | 数学    |   100 |</span><br><span class="line">|          1 | 语文    |    80 |</span><br><span class="line">|          1 | 理化    |    80 |</span><br><span class="line">|          2 | 数学    |    80 |</span><br><span class="line">|          2 | 语文    |    95 |</span><br><span class="line">|          3 | 数学    |    40 |</span><br><span class="line">|          3 | 语文    |    90 |</span><br><span class="line">|          3 | 社会    |    55 |</span><br><span class="line">|          4 | 数学    |    80 |</span><br><span class="line">+------------+---------+-------+</span><br><span class="line">-- 直接写法</span><br><span class="line">select student_id from test_scores group by student_id having sum(case when score&gt;50 then 1 else 0 end)&#x3D;count(*);</span><br><span class="line">-- 转化成双重否定，没有一个科目不满50分</span><br><span class="line">-- 所有学生减去有低于50分的学生</span><br><span class="line">select distinct student_id from test_scores as t1 where not exists (</span><br><span class="line">	select * from test_scores as t2 where t1.student_id&#x3D;t2.student_id and t2.score&lt;50</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">-- 找出数学成绩不低于80，语文成绩不低于50，必须同时拥有语文和数学成绩</span><br><span class="line">-- 直接写法</span><br><span class="line">select student_id from test_scores where 1 &#x3D; case </span><br><span class="line">when subject &#x3D; &#39;语文&#39; and score &gt;&#x3D; 50 then 1 </span><br><span class="line">when subject &#x3D; &#39;数学&#39; and score &gt;&#x3D; 80 then 1 else 0 end group by student_id having count(*) &#x3D; 2;</span><br><span class="line"></span><br><span class="line">-- 双重否定写法，减法运算，注意subject in</span><br><span class="line">select student_id from test_scores as t1 where subject in (&quot;数学&quot;, &quot;语文&quot;) and </span><br><span class="line">not exists (</span><br><span class="line">	select * from test_scores as t2 where </span><br><span class="line">	t1.student_id&#x3D;t2.student_id and 1 &#x3D; case </span><br><span class="line">	when subject &#x3D; &#39;数学&#39; and score &lt; 80 then 1 </span><br><span class="line">	when subject &#x3D; &#39;语文&#39; and score &lt; 50 then 1 else 0 end</span><br><span class="line">) </span><br><span class="line">group by student_id having count(*) &#x3D; 2;</span><br></pre></td></tr></table></figure>
+<p>having与not exists的优缺点比较<br>having逻辑易理解<br>not exists不易理解但利用到索引性能好</p>
+<p>查询列全是null的记录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+------+------+------+------+------+------+------+</span><br><span class="line">| key  | col1 | col2 | col3 | col4 | col5 | col6 |</span><br><span class="line">+------+------+------+------+------+------+------+</span><br><span class="line">| A    | NULL | NULL | NULL | NULL | NULL | NULL |</span><br><span class="line">| B    |    3 | NULL | NULL | NULL | NULL | NULL |</span><br><span class="line">| C    |    1 |    1 |    1 |    1 |    1 |    1 |</span><br><span class="line">| D    | NULL | NULL |    9 | NULL | NULL | NULL |</span><br><span class="line">| E    | NULL |    3 | NULL |    1 |    9 |    9 |</span><br><span class="line">+------+------+------+------+------+------+------+</span><br><span class="line">select * from array where coalesce(col1, col2, col3, col4, col5, col6) is null;	</span><br></pre></td></tr></table></figure>
+
+<p>生成数字0-99</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">-- digit table</span><br><span class="line">+------+</span><br><span class="line">| val  |</span><br><span class="line">+------+</span><br><span class="line">|    1 |</span><br><span class="line">|    2 |</span><br><span class="line">|    3 |</span><br><span class="line">|    4 |</span><br><span class="line">|    5 |</span><br><span class="line">|    6 |</span><br><span class="line">|    7 |</span><br><span class="line">|    9 |</span><br><span class="line">|    0 |</span><br><span class="line">+------+</span><br><span class="line">select d1.val + (d2.val * 10) as seq from digit as d1 cross join digit d2 order by seq;</span><br></pre></td></tr></table></figure>
+<p>生成0-799(三位数)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">select d1.val + (d2.val * 10) + (d3.val * 100) as seq </span><br><span class="line">from digit as d1 cross join digit d2 cross join digit d3 </span><br><span class="line">where d1.val + (d2.val * 10) + (d3.val * 100) &lt; 800 </span><br><span class="line">order by seq;</span><br></pre></td></tr></table></figure>
+
+<p>求全部缺失的编号</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-- 利用上述结果生成视图，视图的结果减去表中已有编号即为缺失编号</span><br><span class="line">create view digit_view as select d1.val + (d2.val * 10) as seq from digit as d1 cross join digit d2 order by seq;</span><br><span class="line"></span><br><span class="line">-- not in 做减法</span><br><span class="line">select * from digit where val not in (select * from digit_view);</span><br></pre></td></tr></table></figure>
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-12</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>

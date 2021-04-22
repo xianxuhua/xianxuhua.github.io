@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  
+  <title>mysql学习5 - xxh blog</title>
+  <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  
+  <meta name="keywords" content=>
+  
+  
+  
+
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+  <div class="blog-title">
+    <a href="/" class="logo">xxh blog</a>
+    <div class="subtitle"></div>
+  </div>
+  <nav class="navbar">
+    <ul class="menu">
+      
+        <li class="menu-item">
+          <a href="/" class="menu-item-link">Home</a>
+        </li>
+      
+        <li class="menu-item">
+          <a href="/about" class="menu-item-link">About</a>
+        </li>
+      
+    </ul>
+  </nav>
+</header>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">mysql学习5</h1>
+  </div>
+
+  <!-- 文章目录 -->
+  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#mysql%E7%9A%84%E5%90%AF%E5%8A%A8"><span class="toc-text">mysql的启动</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mysql%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE"><span class="toc-text">mysql通信协议</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mysql%E5%A4%84%E7%90%86%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AF%B7%E6%B1%82"><span class="toc-text">mysql处理客户端请求</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E4%B8%80%E4%BA%9B%E6%93%8D%E4%BD%9C"><span class="toc-text">存储引擎的一些操作</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mysql%E7%9A%84%E5%90%AF%E5%8A%A8%E9%A1%B9%E5%92%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text">mysql的启动项和配置文件</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E5%8F%98%E9%87%8F"><span class="toc-text">系统变量</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%8A%B6%E6%80%81%E5%8F%98%E9%87%8F"><span class="toc-text">状态变量</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E9%9B%86"><span class="toc-text">字符集</span></a></li></ol>
+
+  <div class="post-content">
+    <h1 id="mysql的启动"><a href="#mysql的启动" class="headerlink" title="mysql的启动"></a>mysql的启动</h1><p>服务器启动<br>mysqld启动mysql进程<br>mysqld_safe调用mysqld并监控运行状态，帮助重启服务器，并将错误信息输出到错误日志<br>mysql.server调用mysqld_safe，mysql.server start启动服务器<br>mysqld_mult启动或停止多个mysql<br>mysqld –console查看启动日志<br>mysqld -P 3307指定启动端口</p>
+<h1 id="mysql通信协议"><a href="#mysql通信协议" class="headerlink" title="mysql通信协议"></a>mysql通信协议</h1><p>mysql使用tcp协议进行客户端和服务器通信<br>如果是windows系统使用命名管道或共享内存通信，共享内存需要客户端和服务器在同一台机器上<br>如果是mac系统使用unix域套接字通信，mysql默认监听/tmp/mysql.socket文件，若要修改可通过mysqld –socket=/tmp/mysql2.socket，客户端也可mysql -h localhost -u root -p –socket=/tmp/mysql2.socket</p>
+<h1 id="mysql处理客户端请求"><a href="#mysql处理客户端请求" class="headerlink" title="mysql处理客户端请求"></a>mysql处理客户端请求</h1><p>每当有客户端连接服务器会创建一个线程处理，客户端退出线程不会立即销毁，而是等待其他客户端的连接再分配<br>mysql查询缓存：两个查询请求有任何字符不同都不会导致命中，某些系统函数如now不可能命中，查询缓存是表级别的，若表被修改过则清空整张表的查询缓存，mysql8中直接删除了查询缓存<br>mysql处理请求过程分为server层和存储引擎层，server写把查询到的数据发送到缓冲区，等缓冲区满了再发送给客户端，缓冲区大小由net_buffer_length控制</p>
+<h1 id="存储引擎的一些操作"><a href="#存储引擎的一些操作" class="headerlink" title="存储引擎的一些操作"></a>存储引擎的一些操作</h1><p>show engines查询服务器支持的存储引擎，xa表示是否支持分布式事务，savepoints表示是否支持分布式部分回滚<br>创建表时可以指定存储引擎</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create table user () engine &#x3D; InnoDB;</span><br></pre></td></tr></table></figure>
+<h1 id="mysql的启动项和配置文件"><a href="#mysql的启动项和配置文件" class="headerlink" title="mysql的启动项和配置文件"></a>mysql的启动项和配置文件</h1><p>禁止使用tcp网络通信</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqld --skip-networking</span><br></pre></td></tr></table></figure>
+<p>启动服务器时指定存储引擎</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqld --default-storage-engine&#x3D;MyISAM</span><br></pre></td></tr></table></figure>
+<p>mysql配置文件：/ect/my.cnf, /ect/mysql/my.cnf, ~/.my.cnf<br>~/.my.cnf的优先级大于/ect/my.cnf<br>配置文件添加默认配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[server]</span><br><span class="line">default-storage-engine&#x3D;MyISAM</span><br></pre></td></tr></table></figure>
+<p>启动项的优先级高于配置文件</p>
+<h1 id="系统变量"><a href="#系统变量" class="headerlink" title="系统变量"></a>系统变量</h1><p>查看系统变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#39;default_storage_engine&#39;; &#x2F;&#x2F; 必须使用_</span><br></pre></td></tr></table></figure>
+<p>系统变量的作用范围：global和session<br>启动服务器使用的是global，每当有客户端链接作用范围为session<br>单独设置global和session的系统变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set global default_storage_engine&#x3D;MyISAM;</span><br><span class="line">set session default_storage_engine&#x3D;MyISAM;</span><br></pre></td></tr></table></figure>
+<p>单独查看global和session的系统变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">show global variables like &#39;default_storage_engine&#39;;</span><br><span class="line">show session variables like &#39;default_storage_engine&#39;;</span><br></pre></td></tr></table></figure>
+<p>max_connections只有global范围<br>insert_id(AUTO_INCREMENT时的初始值)只有session范围</p>
+<h1 id="状态变量"><a href="#状态变量" class="headerlink" title="状态变量"></a>状态变量</h1><p>Threads_connected表示有多少个链接的客户端<br>查看状态变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show status like &#39;thread%&#39;;</span><br></pre></td></tr></table></figure>
+<h1 id="字符集"><a href="#字符集" class="headerlink" title="字符集"></a>字符集</h1><p>Latin1: iso 8859-1共收录256个字符<br>utf-8使用1-4个字节编码<br>utf8mb3: 只有1-3个字节的utf-8<br>utf8mb4: 1-4个字节，4字节可保存emoji表情，mysql8中的默认字符集<br>查看字符集</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show charset;</span><br></pre></td></tr></table></figure>
+<p>default collation表示字符集的默认比较规则<br>查看比较规则</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show collation like &#39;utf8%&#39;;</span><br></pre></td></tr></table></figure>
+<p>utf8_general_ci(默认)表示通用规则不区分大小写，utf8_general_cs区分大小写</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select &#39;a&#39; &#x3D; &#39;A&#39;; &#x2F;&#x2F; 返回true</span><br></pre></td></tr></table></figure>
+<p>查看服务器级别的字符集和比较规则</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#39;character_set_server&#39;;</span><br><span class="line">show variables like &#39;collation_server&#39;;</span><br></pre></td></tr></table></figure>
+<p>可以在配置文件修改字符集和比较规则</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[server]</span><br><span class="line">character_set_server&#x3D;gb2312</span><br><span class="line">collation_server&#x3D;gb2312_chinese_ci</span><br></pre></td></tr></table></figure>
+<p>也可以在创建数据库时声明</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">create database test character set gb2312 collate gb2312_chinese_ci;</span><br><span class="line">use test;</span><br><span class="line">show variables like &#39;character_set_database&#39;;</span><br><span class="line">show variables like &#39;collation_database&#39;;</span><br></pre></td></tr></table></figure>
+<p>表级别的字符集</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create table user () character set utf8 collate utf8_general_ci;</span><br></pre></td></tr></table></figure>
+<p>行级别的字符集</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter tbaler user modify name varchar(20) character set gbk collate gbk_chinese_ci;</span><br></pre></td></tr></table></figure>
+<p>只修改字符集，比较规则也会跟着变为相应的默认，<br>只修改比较规则，字符集也会相应改变<br>操作系统的字符集可通过环境变量查看，优先级$LC_ALL &gt; $LC_CTYPE &gt; $LANG<br>windows系统可通过chcp命令查看，936表示GBK，65001表示utf-8<br>客户端的字符集，客户端使用utf8请求</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql --default_character_set&#x3D;utf8</span><br></pre></td></tr></table></figure>
+<p>三种系统变量：character_set_client, character_set_connection, character_set_results<br>三者为session级别<br>default_character_set: 客户端发送数据使用的编码<br>1.character_set_client: 服务器认为客户端使用该编码<br>2.character_set_connection: 请求处理时使用的编码<br>3.character_set_results: 返回给客户端数据时使用的编码<br>character_set_server: 数据存储的编码</p>
+<p>客户端的默认字符集为操作系统默认字符集，若操作系统字符集为ascii，则mysql客户端默认字符集为latin1，mysql5.7使用latin1为默认字符集，mysql8使用utf8mb4为默认字符集，若设置了default-character-set则忽略操作系统默认字符集，服务器收到上述三种字符集后初始化为客户端默认字符集</p>
+
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-04-06</span>
+  </div>
+
+  <div class="post-footer">
+    
+
+    <a href="#top" class="top">Back to Top</a>
+  </div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
+<footer>
+  2021
+  <span class="author">
+    xianxuhua
+  </span>
+</footer>
+
+
+    </div>
+  </body>
+</html>
