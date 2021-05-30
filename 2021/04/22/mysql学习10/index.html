@@ -67,6 +67,16 @@
 <p>查找存在重复记录的组</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select field from table group by field having count(item) &lt;&gt; count(distinct item)</span><br></pre></td></tr></table></figure>
 
+<p>三个人能否坐得下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+------+-----------+</span><br><span class="line">| seat | status    |</span><br><span class="line">+------+-----------+</span><br><span class="line">|    1 | 已预订    |</span><br><span class="line">|    2 | 已预订    |</span><br><span class="line">|    3 | 未预定    |</span><br><span class="line">|    4 | 未预定    |</span><br><span class="line">|    5 | 未预定    |</span><br><span class="line">|    6 | 已预订    |</span><br><span class="line">+------+-----------+</span><br></pre></td></tr></table></figure>
+<p>查找连续的三个座位为未预定</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- s1, s2作为起始和结束座位，使用not exists做减法去除存在已预订的位置</span><br><span class="line">select s2.seat as start_seat, s1.seat as end_seat from seats as s1, seats as s2 where s1.seat &#x3D; s2.seat + 2 and not exists (</span><br><span class="line">	select * from seats as s3 where s3.seat between s2.seat and s1.seat and s3.status &#x3D; &#39;已预订&#39;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>单调递增和单调递减区间</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">-- 股价动态表</span><br><span class="line">+---------------------+-------+</span><br><span class="line">| deal_date           | price |</span><br><span class="line">+---------------------+-------+</span><br><span class="line">| 2020-01-06 00:00:00 |  1000 |</span><br><span class="line">| 2020-01-08 00:00:00 |  1050 |</span><br><span class="line">| 2020-01-09 00:00:00 |  1050 |</span><br><span class="line">| 2020-01-12 00:00:00 |   900 |</span><br><span class="line">| 2020-01-13 00:00:00 |   880 |</span><br><span class="line">| 2020-01-14 00:00:00 |   870 |</span><br><span class="line">| 2020-01-16 00:00:00 |   920 |</span><br><span class="line">| 2020-01-17 00:00:00 |  1000 |</span><br><span class="line">+---------------------+-------+</span><br></pre></td></tr></table></figure>
+<p>求股价的递增或递减区间</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-- 先求出所有区间的组合</span><br><span class="line">select s1.deal_date as start_date, s2.deal_date as end_date from stock as s1, stock as s2 where s1.deal_date &lt; s2.deal_date;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- 拿上述结果减去不符合条件的(上一个问题只需根据status去除)</span><br><span class="line">select s1.deal_date as start_date, s2.deal_date as end_date from stock as s1, stock as s2 where s1.deal_date &lt; s2.deal_date and not exists (</span><br><span class="line">	select * from stock as s3, stock as s4 where s3.deal_date between s1.deal_date and s2.deal_date and s4.deal_date between s1.deal_date and s2.deal_date and s3.deal_date &lt; s4.deal_date and s3.price &gt;&#x3D; s4.price</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
   </div>
   <div class="post-meta">
     <span class="post-time" style="color:#646060;font-size:13px">2021-04-22</span>
@@ -106,8 +116,8 @@
     <script>
     	/* 配置 */
         var config = {
-            width: 500, /* 窗口宽度最大值 */
-            height: 400, /* 窗口高度最大值 */
+            width: 600, /* 窗口宽度最大值 */
+            height: 500, /* 窗口高度最大值 */
             left: '700px',
             bottom: '300px',
             basePath: 'AzurLaneL2DViewer/assets',

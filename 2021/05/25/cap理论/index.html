@@ -6,7 +6,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
   
-  <title>Project - xxh blog</title>
+  <title>cap理论、Base理论、分布式事务解决方案 - xxh blog</title>
   <link rel="icon" href="https://i.imgur.com/SrZt9VU.jpg" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   
@@ -52,14 +52,48 @@
     </ul>
   </nav>
 </header>
-<div class="page">
-  <div class="page-title">
-    <h1 class="article-title"></h1>
+
+<article class="post">
+  <div class="post-title">
+    <h1 class="article-title">cap理论、Base理论、分布式事务解决方案</h1>
   </div>
-  <div class="page-content">
+
+  <!-- 文章目录 -->
+  
+
+  <div class="post-content">
+    <p>c：一致性：所有结点在同一时间数据完全一致<br>a：可用性：服务一直可用<br>p：分区容错性：结点故障时仍能对外提供一致性和可用性服务</p>
+<p>数据库主从复制中存在延迟，若希望从数据库能读到正确的数据需要加锁复制，复制完释放锁用户才能读到，加锁保证了一致性但复制较慢的情况不满足可用性，若不加锁可用性能满足一致性无法满足。一旦网络出问题，要满足分区容错性。</p>
+<p>像redis数据库满足c和p不满足a，coachdb满足a和p不满足c，单机mysql满足c和a不满足p。</p>
+<p>Base理论：一致性和可用性基本满足，中间等待一段时间，用户量过多提醒用户稍后再试</p>
+<p>分布式事务解决方案：</p>
+
+  </div>
+  <div class="post-meta">
+    <span class="post-time" style="color:#646060;font-size:13px">2021-05-25</span>
+  </div>
+
+  <div class="post-footer">
     
+
+    <a href="#top" class="top">Back to Top</a>
   </div>
-</div>
+</article>
+
+<!-- 评论插件 -->
+<div id="vcomment" class="comment"></div> 
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh//AshinWang/SimpleValine/SimpleValine.min.js"></script>
+<script>
+    window.onload = function() {
+        new Valine({
+            el: '.comment',
+            app_id: "Tu9ECQs62wVCKv4eV27Jz6zA-gzGzoHsz",
+            app_key: "58pRnmmpdWOmHiOS3mM4u0Kn",
+			highlight: false
+        });
+    }
+</script>
 <footer>
   2021
   <span class="author">
